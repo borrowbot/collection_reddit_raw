@@ -1,0 +1,3 @@
+sql:
+  host: localhost
+  port: 2002

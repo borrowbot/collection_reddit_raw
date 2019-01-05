@@ -6,5 +6,5 @@ reddit = praw.Reddit(client_id='EXmKlisPai3bBA', client_secret='M-f_hLb4F3XMSDa1
 
 subreddit = reddit.subreddit('borrow')
 
-for posts in subreddit.new(limit=10):
+for posts in subreddit.new():
 	print(posts.title)

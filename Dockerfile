@@ -1,0 +1,10 @@
+FROM baseimage
+
+ENV SERVICE_NAME collection_raw_ingest
+
+ENV BASE_PATH $SVC_PATH/$SERVICE_NAME/
+ADD . $BASE_PATH
+RUN mkdir $BASE_PATH/logs
+WORKDIR $BASE_PATH
+
+ENTRYPOINT $BASE_PATH/entrypoint.sh

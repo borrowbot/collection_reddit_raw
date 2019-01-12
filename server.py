@@ -6,9 +6,10 @@ server = get_flask_server()
 scheduler = Scheduler()
 
 
-@server.route("/fill_data&start=start?end=")
+@server.route("/fill_data?start=<start>&end=<end>", methods=['POST'])
 def fill_data(start, end):
-    scheduler.get(start, end)
+    print("{},{}".format(start, end))
+    return "Hello World"
 
 
 server.run()

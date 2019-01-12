@@ -65,7 +65,6 @@ def create_endpoint_function(name, config):
         # Loop over the API request, since multiple may be required if the
         # specified limit is greater than config['limit']
         for limit in limit_chunk(coerced_kwargs['limit'], config['limit']):
-            print("ONCE")
             coerced_kwargs['limit'] = limit
             query_params = urlencode(coerced_kwargs)
             url = '{}{}?{}'.format(BASE_ADDRESS, config['url'], query_params)

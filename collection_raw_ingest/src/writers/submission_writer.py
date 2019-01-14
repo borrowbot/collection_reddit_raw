@@ -17,4 +17,5 @@ class SubmissionWriter(ChunkWriter):
             "title": "title",
             "text": "text"
         }
-        super().__init__(logger, template, sql_parameters, queue_size)
+        table_name = "submissions"
+        super().__init__(logger, template, table_name, sql_parameters, queue_size)

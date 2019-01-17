@@ -1,25 +1,32 @@
+import pandas as pd
 import MySQLdb as sql
+from sqlalchemy import create_engine
 import threading
 
 
 class ChunkWriter(object):
-    def __init__(self, logger, template, table_name, sql_parameters, queue_size=16):
+    """ Template is a dictionary which maps an attribute name to a column in the target SQL DB.
+    """
+    def __init__(self, logger, template, table_name, sql_parameters, batch_size=16):
         self.template = template
         self.table_name = table_name
         self.sql_parameters = sql_parameters
-        self.queue_size = queue_size
+        self.batch_size = batch_size
 
         self.push_lock = threading.Lock()
-        self.work_queue = []
-        self.num_items = 0
+
+        self.work_queue = None
+        self.num_items = None
+        self.reset_work_queue()
 
 
     def push(self, item):
         with self.push_lock:
-            self.work_queue.append(item)
+            new_entry = {self.template[k]: getattr(item, k) for k in self.template}
+            self.work_queue = self.work_queue.append(new_entry, ignore_index=True)
             self.num_items += 1
 
-            if self.num_items >= self.queue_size:
+            if self.num_items >= self.batch_size:
                 self.unsafe_flush()
 
 
@@ -28,21 +35,19 @@ class ChunkWriter(object):
             self.unsafe_flush()
 
 
-    def unsafe_flush(self):
-        self.write_sql()
-        self.work_queue = []
+    def reset_work_queue(self):
+        self.work_queue = pd.DataFrame(columns=self.template.values())
         self.num_items = 0
 
 
-    def write_sql(self):
-        # query = 'INSERT INTO {} {} VALUES {};'.format(
-        #     self.table_name,
-        #     COLUMNS,
-        #     VALUES
-        # )
-        print()
-        # db = sql.connect(**self.sql_parameters)
-        # cur = db.cursor()
-        # cur.execute(query)
-        # cur.close()
-        # db.close()
+    def unsafe_flush(self):
+        engine = create_engine("mysql://{}:{}@{}/{}?charset=utf8mb4".format(
+            self.sql_parameters['user'],
+            self.sql_parameters['passwd'],
+            self.sql_parameters['host'],
+            self.sql_parameters['db'],
+        ), convert_unicode=True, encoding='utf-8')
+        con = engine.connect()
+        self.work_queue.to_sql(self.table_name, con=con, if_exists='append', index=False)
+        print(self.work_queue)
+        self.reset_work_queue()

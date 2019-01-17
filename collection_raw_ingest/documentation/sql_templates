@@ -5,10 +5,10 @@ submissions (
   score MEDIUMINT UNSIGNED,
   num_comments MEDIUMINT UNSIGNED,
   author_name VARCHAR(128),
-  author_id VARCHAR(16)
+  author_id VARCHAR(16),
   permalink VARCHAR(256),
   subreddit_name VARCHAR(128),
-  subreddit_id VARCHAR(16)
+  subreddit_id VARCHAR(16),
   title VARCHAR(512),
   text TEXT
 )

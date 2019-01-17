@@ -1,5 +1,6 @@
 import MySQLdb as sql
 import threading
+import calendar
 from datetime import datetime
 
 from baseimage.config import CONFIG
@@ -11,6 +12,8 @@ from collection_raw_ingest.src.writers.submission_writer import SubmissionWriter
 from collection_raw_ingest.src.writers.comment_writer import CommentWriter
 
 
+# All times in the scheduler logic use seconds from unix epoch
+# In the submission wrapper classes and MySQL DB, this is converted to UTC datetime
 DEFAULT_START_DATETIME = 1262304000 # 2010-01-01
 
 
@@ -28,37 +31,42 @@ class Scheduler(object):
         self.first_entry = None
         self.last_entry = None
         self.get_time_bounds()
-        self.logger.info("found existing data with time bounds {}, {}".format(self.first_entry, self.last_entry))
         self.logger.info("initiated submission/comment pipeline")
 
 
-    def get(self, start, limit=64):
+    def get(self, limit=64):
+        with self.job_lock:
+            self.logger.info("performing a safe get of {} items".format(limit))
+            self.unsafe_get(self.last_entry, limit)
+
+
+    def unsafe_get(self, start, limit=64):
         """ A function which ingests raw data into databases. The function pulls, parses, and stores all submissions
             which can be found within the specified range making use of the `psraw` reddit API.
 
         Args
             start <string>: A interger representing seconds from the unix epoch
         """
-        with self.job_lock:
-            self.logger.info("ingesting data from after {} (limit {})".format(
-                datetime.fromtimestamp(start).strftime('%Y-%m-%d %H:%M:%S'),
-                limit
-            ))
+        self.logger.info("ingesting data from after {} (limit {})".format(
+            datetime.fromtimestamp(start).strftime('%Y-%m-%d %H:%M:%S'),
+            limit
+        ))
 
-            iterator = psraw.submission_search(
-                self.reddit, q='', subreddit=self.subreddit,
-                limit=limit, sort='desc', after=start
-            )
+        iterator = psraw.submission_search(
+            self.reddit, q='', subreddit=self.subreddit,
+            limit=limit, sort='asc', after=start
+        )
 
-            counter = 0
-            for submission in iterator:
-                print("{}: {}".format(datetime.fromtimestamp(submission.created_utc).strftime('%Y-%m-%d %H:%M:%S'), submission.id))
-                submission = Submission(submission)
-                self.submission_writer.push(submission)
-                counter += 1
-            self.submission_writer.flush()
+        counter = 0
+        for submission in iterator:
+            print("{}: {}".format(datetime.fromtimestamp(submission.created_utc).strftime('%Y-%m-%d %H:%M:%S'), submission.permalink))
+            self.last_entry = submission.created_utc
+            submission = Submission(submission)
+            self.submission_writer.push(submission)
+            counter += 1
+        self.submission_writer.flush()
 
-            self.logger.info('ingested {} new submissions'.format(counter))
+        self.logger.info('ingested {} new submissions'.format(counter))
 
 
     def get_time_bounds(self):
@@ -77,3 +85,9 @@ class Scheduler(object):
         if self.last_entry is None:
             self.first_entry = DEFAULT_START_DATETIME
             self.last_entry = DEFAULT_START_DATETIME
+            self.logger.info("no historical data found, starting with {} as a bound".format(self.first_entry))
+
+        else:
+            self.first_entry = calendar.timegm(self.first_entry.timetuple())
+            self.last_entry = calendar.timegm(self.last_entry.timetuple())
+            self.logger.info("found existing data with time bounds {}, {}".format(self.first_entry, self.last_entry))

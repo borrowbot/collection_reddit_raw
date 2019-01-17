@@ -41,6 +41,15 @@ class ChunkWriter(object):
 
 
     def unsafe_flush(self):
+        self.clear_existing_entries()
+        self.write_new_entries()
+
+
+    def clear_existing_entries(self):
+        pass
+
+
+    def write_new_entries(self):
         engine = create_engine("mysql://{}:{}@{}/{}?charset=utf8mb4".format(
             self.sql_parameters['user'],
             self.sql_parameters['passwd'],

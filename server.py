@@ -13,9 +13,8 @@ scheduler = Scheduler(logger, "borrow")
 
 @server.route("/fill_data", methods=['POST'])
 def fill_data():
-    start = request.args.get('start', type=int)
     limit = request.args.get('limit', type=int, default=1)
-    scheduler.get(start, limit)
+    scheduler.get(limit)
     return "Hello World"
 
 

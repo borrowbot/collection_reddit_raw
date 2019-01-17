@@ -8,6 +8,7 @@ from baseimage.config import CONFIG
 import praw
 import collection_raw_ingest.src.psraw as psraw
 from collection_raw_ingest.src.wrapper_objects.submission import Submission
+from collection_raw_ingest.src.wrapper_objects.comment import Comment
 from collection_raw_ingest.src.writers.submission_writer import SubmissionWriter
 from collection_raw_ingest.src.writers.comment_writer import CommentWriter
 
@@ -62,10 +63,19 @@ class Scheduler(object):
         counter = 0
         for submission in iterator:
             print("{}: {}".format(datetime.fromtimestamp(submission.created_utc).strftime('%Y-%m-%d %H:%M:%S'), submission.permalink))
-            self.last_entry = submission.created_utc
-            submission = Submission(submission)
-            self.submission_writer.push(submission)
+            self.submission_writer.push(Submission(submission))
+
+            comment_iterator = psraw.comment_search(
+                self.reddit, q='', subreddit=self.subreddit, limit=100000,
+                sort='asc', link_id=submission.id
+            )
+            for comment in comment_iterator:
+                print(" | {}".format(datetime.fromtimestamp(comment.created_utc).strftime('%Y-%m-%d %H:%M:%S')))
+                self.comment_writer.push(Comment(comment))
+
             counter += 1
+
+        self.last_entry = submission.created_utc
         self.submission_writer.flush()
 
         self.logger.info('ingested {} new submissions'.format(counter))

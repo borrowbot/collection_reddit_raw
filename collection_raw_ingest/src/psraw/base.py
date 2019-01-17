@@ -68,7 +68,8 @@ def create_endpoint_function(name, config):
             coerced_kwargs['limit'] = limit
             query_params = urlencode(coerced_kwargs)
             url = '{}{}?{}'.format(BASE_ADDRESS, config['url'], query_params)
-            data = requests.get(url).json()['data']
+            data = requests.get(url)
+            data = data.json()['data']
 
             for item in data:
                 yield config['return_type'](r, _data=item)

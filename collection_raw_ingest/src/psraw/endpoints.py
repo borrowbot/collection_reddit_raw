@@ -22,7 +22,8 @@ ENDPOINTS = {
             'q': str,
             'sort': sort_type,
             'subreddit': str,
-            'author': str
+            'author': str,
+            'link_id': str
         },
         'limit': 500,
         'return_type': praw.models.Comment,

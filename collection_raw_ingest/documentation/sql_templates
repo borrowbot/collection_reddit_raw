@@ -17,7 +17,17 @@ submissions (
 
 
 comments (
-
+  comment_id VARCHAR(16) NOT NULL PRIMARY KEY,
+  creation_datetime DATETIME,
+  retrieval_datetime DATETIME,
+  score MEDIUMINT,
+  subreddit_name VARCHAR(128),
+  subreddit_id VARCHAR(16),
+  text TEXT,
+  author_name VARCHAR(128),
+  author_id VARCHAR(16),
+  parent_id VARCHAR(16),
+  link_id VARCHAR(16)
 )
 
 

@@ -6,7 +6,7 @@ class Submission(object):
     def __init__(self, praw_submission):
         self.praw_submission = praw_submission
 
-        self.submission_id = self.praw_submission.id
+        self.submission_id = 't3_' + self.praw_submission.id
         self.creation_datetime = datetime.utcfromtimestamp(self.praw_submission.created_utc)
         self.retrieval_datetime = datetime.utcnow()
         self.score = self.praw_submission.score

@@ -1,0 +1,36 @@
+submissions (
+  submission_id VARCHAR(16) NOT NULL PRIMARY KEY,
+  creation_datetime DATETIME,
+  retrieval_datetime DATETIME,
+  score MEDIUMINT UNSIGNED,
+  num_comments MEDIUMINT UNSIGNED,
+  author_name VARCHAR(128),
+  author_id VARCHAR(16),
+  upvote_ratio FLOAT(3,2),
+  url VARCHAR(512),
+  permalink VARCHAR(512),
+  subreddit_name VARCHAR(128),
+  subreddit_id VARCHAR(16),
+  title VARCHAR(512),
+  text TEXT
+)
+
+
+comments (
+  comment_id VARCHAR(16) NOT NULL PRIMARY KEY,
+  creation_datetime DATETIME,
+  retrieval_datetime DATETIME,
+  score MEDIUMINT,
+  subreddit_name VARCHAR(128),
+  subreddit_id VARCHAR(16),
+  text TEXT,
+  author_name VARCHAR(128),
+  author_id VARCHAR(16),
+  parent_id VARCHAR(16),
+  link_id VARCHAR(16)
+)
+
+
+authors (
+
+)

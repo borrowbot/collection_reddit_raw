@@ -1,0 +1,4 @@
+praw
+mysqlclient
+sqlalchemy
+pandas

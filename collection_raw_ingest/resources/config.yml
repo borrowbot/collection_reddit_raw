@@ -1,3 +1,14 @@
+subreddit: borrow
+port: 7000
+reddit:
+  client_id:
+  client_secret:
+  password:
+  user_agent:
+  username:
 sql:
-  host: localhost
-  port: 2002
+  host:
+  port:
+  user:
+  passwd:
+  db:

@@ -19,6 +19,8 @@ DEFAULT_START_DATETIME = 1262304000 # 2010-01-01
 
 
 class Scheduler(object):
+    """ A API request scheduler for ingesting reddit API
+    """
     def __init__(self, logger, subreddit):
         self.logger = logger
         self.subreddit = subreddit
@@ -26,8 +28,8 @@ class Scheduler(object):
         self.sql_parameters = CONFIG['sql']
 
         self.job_lock = threading.Lock()
-        self.submission_writer = SubmissionWriter(self.logger, CONFIG['sql'])
-        self.comment_writer = CommentWriter(self.logger, CONFIG['sql'])
+        self.submission_writer = SubmissionWriter(self.logger, CONFIG['sql'], batch_size=32)
+        self.comment_writer = CommentWriter(self.logger, CONFIG['sql'], batch_size=64)
 
         self.first_entry = None
         self.last_entry = None
@@ -36,17 +38,22 @@ class Scheduler(object):
 
 
     def get(self, limit=64):
+        """ A function which ingests raw data into databases. The function pulls, parses, and stores all submissions
+            which can be found within the specified range making use of the `psraw` reddit API. This function call is
+            blocking and cannot be concurrently called by multiple threads.
+
+        Args
+            limit <int>: A integer denoting how many new reddit submissions to pull in. `limit` denotes a maximum number
+                of new submissions.
+        """
         with self.job_lock:
             self.logger.info("performing a safe get of {} items".format(limit))
             return self.unsafe_get(self.last_entry, limit)
 
 
     def unsafe_get(self, start, limit=64):
-        """ A function which ingests raw data into databases. The function pulls, parses, and stores all submissions
-            which can be found within the specified range making use of the `psraw` reddit API.
-
-        Args
-            start <string>: A interger representing seconds from the unix epoch
+        """ A nonblocking, unsafe version of get. A starting argument is provided but can cause problems with data
+            continuity and duplication if called concurrently by different threads.
         """
         self.logger.info("ingesting data from after {} (limit {})".format(
             datetime.fromtimestamp(start).strftime('%Y-%m-%d %H:%M:%S'),
@@ -89,6 +96,9 @@ class Scheduler(object):
 
 
     def get_time_bounds(self):
+        """ An initialization method which checks the existing time bounds of data in the database so that the server
+            can maintain non-duplicate data when it is shutdown and restarted.
+        """
         query = 'SELECT MIN(creation_datetime) as min, MAX(creation_datetime) as max FROM submissions WHERE subreddit_name="{}"'.format(self.subreddit)
 
         db = sql.connect(**self.sql_parameters)

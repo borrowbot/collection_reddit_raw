@@ -74,7 +74,7 @@ class Scheduler(object):
             "run_parameters": {"start": start, "limit": limit,},
             "old_bounds": {"start": old_first, "end": old_last},
             "new_bounds": {"start": self.first_entry, "end": self.last_entry},
-            "num_new_itesm": counter
+            "num_new_items": counter
         }
 
 

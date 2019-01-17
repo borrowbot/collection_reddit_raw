@@ -19,7 +19,9 @@ DEFAULT_START_DATETIME = 1262304000 # 2010-01-01
 
 
 class Scheduler(object):
-    """ A API request scheduler for ingesting reddit API
+    """ A API request scheduler for ingesting reddit submissions and posts from a single subreddit. This scheduler gets
+        PRAW submission and comment objects making use of the pushshift.io API and writes them to a MySQL table. Safe
+        usage of this class ensures contiguous, complete, and non-dupicate data. See the README.md for more details.
     """
     def __init__(self, logger, subreddit):
         self.logger = logger

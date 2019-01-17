@@ -83,3 +83,6 @@ The service can be run with:
 ```
 docker run -d --network=host collection_raw_ingest
 ```
+
+
+# Using the API

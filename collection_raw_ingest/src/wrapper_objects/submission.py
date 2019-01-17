@@ -11,6 +11,8 @@ class Submission(object):
         self.retrieval_datetime = datetime.utcnow()
         self.score = self.praw_submission.score
         self.num_comments = self.praw_submission.num_comments
+        self.url = self.praw_submission.url
+        self.upvote_ratio = self.praw_submission.upvote_ratio
         self.permalink = self.praw_submission.permalink
         self.subreddit_name = self.praw_submission.subreddit
         self.subreddit_id = self.praw_submission.subreddit.name

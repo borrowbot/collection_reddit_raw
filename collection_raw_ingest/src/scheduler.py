@@ -37,7 +37,7 @@ class Scheduler(object):
     def get(self, limit=64):
         with self.job_lock:
             self.logger.info("performing a safe get of {} items".format(limit))
-            self.unsafe_get(self.last_entry, limit)
+            return self.unsafe_get(self.last_entry, limit)
 
 
     def unsafe_get(self, start, limit=64):
@@ -51,6 +51,8 @@ class Scheduler(object):
             datetime.fromtimestamp(start).strftime('%Y-%m-%d %H:%M:%S'),
             limit
         ))
+        old_first = self.first_entry
+        old_last = self.last_entry
 
         iterator = psraw.submission_search(
             self.reddit, q='', subreddit=self.subreddit,
@@ -67,6 +69,13 @@ class Scheduler(object):
         self.submission_writer.flush()
 
         self.logger.info('ingested {} new submissions'.format(counter))
+
+        return {
+            "run_parameters": {"start": start, "limit": limit,},
+            "old_bounds": {"start": old_first, "end": old_last},
+            "new_bounds": {"start": self.first_entry, "end": self.last_entry},
+            "num_new_itesm": counter
+        }
 
 
     def get_time_bounds(self):

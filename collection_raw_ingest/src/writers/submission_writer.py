@@ -11,6 +11,8 @@ class SubmissionWriter(ChunkWriter):
             "num_comments": "num_comments",
             "author_name": "author_name",
             "author_id": "author_id",
+            "url": "url",
+            "upvote_ratio": "upvote_ratio",
             "permalink": "permalink",
             "subreddit_name": "subreddit_name",
             "subreddit_id": "subreddit_id",

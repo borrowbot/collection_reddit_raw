@@ -1,8 +1,8 @@
-from collection_raw_ingest.src.writers.base_writer import ChunkWriter
+from lib_collection.batch_writer import BatchWriter
 
 
-class SubmissionWriter(ChunkWriter):
-    def __init__(self, logger, sql_parameters, queue_size=16):
+class SubmissionWriter(BatchWriter):
+    def __init__(self, logger, sql_parameters, batch_size=16):
         template = {
             "submission_id": "submission_id",
             "creation_datetime": "creation_datetime",
@@ -20,4 +20,4 @@ class SubmissionWriter(ChunkWriter):
             "text": "text"
         }
         table_name = "submissions"
-        super().__init__(logger, template, table_name, sql_parameters, queue_size)
+        super().__init__(logger, template, table_name, sql_parameters, batch_size)

@@ -69,7 +69,7 @@ CREATE TABLE comments (
 To build the docker container, first build the [baseimage](https://github.com/borrowbot/baseimage) with the following command:
 
 ```
-docker build . -t baseimage
+docker build . -t baseimage_borrowbot
 ```
 
 Then, the DockerFile here can be built with:

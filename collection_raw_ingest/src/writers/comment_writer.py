@@ -1,8 +1,8 @@
-from collection_raw_ingest.src.writers.base_writer import ChunkWriter
+from lib_collection.batch_writer import BatchWriter
 
 
-class CommentWriter(ChunkWriter):
-    def __init__(self, logger, sql_parameters, queue_size=16):
+class CommentWriter(BatchWriter):
+    def __init__(self, logger, sql_parameters, batch_size=16):
         template = {
             'comment_id': 'comment_id',
             'creation_datetime': 'creation_datetime',
@@ -17,4 +17,4 @@ class CommentWriter(ChunkWriter):
             'author_id': 'author_id'
         }
         table_name = 'comments'
-        super().__init__(logger, template, table_name, sql_parameters, queue_size)
+        super().__init__(logger, template, table_name, sql_parameters, batch_size)

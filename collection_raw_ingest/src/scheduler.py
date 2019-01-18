@@ -1,11 +1,8 @@
-import MySQLdb as sql
-import threading
-import calendar
 from datetime import datetime
-
-from baseimage.config import CONFIG
-
 import praw
+
+from lib_collection.scheduler import Scheduler
+
 import collection_raw_ingest.src.psraw as psraw
 from collection_raw_ingest.src.wrapper_objects.submission import Submission
 from collection_raw_ingest.src.wrapper_objects.comment import Comment
@@ -13,50 +10,24 @@ from collection_raw_ingest.src.writers.submission_writer import SubmissionWriter
 from collection_raw_ingest.src.writers.comment_writer import CommentWriter
 
 
-# All times in the scheduler logic use seconds from unix epoch
-# In the submission wrapper classes and MySQL DB, this is converted to UTC datetime
-DEFAULT_START_DATETIME = 1262304000 # 2010-01-01
-
-
-class Scheduler(object):
+class SubRedditScheduler(Scheduler):
     """ A API request scheduler for ingesting reddit submissions and posts from a single subreddit. This scheduler gets
         PRAW submission and comment objects making use of the pushshift.io API and writes them to a MySQL table. Safe
         usage of this class ensures contiguous, complete, and non-dupicate data. See the README.md for more details.
     """
-    def __init__(self, logger, subreddit):
-        self.logger = logger
+    def initialize_custom_attributes(self, subreddit, reddit_params):
+        self.submission_writer = SubmissionWriter(self.logger, self.sql_parameters, batch_size=4)
+        self.comment_writer = CommentWriter(self.logger, self.sql_parameters, batch_size=8)
         self.subreddit = subreddit
-        self.reddit = praw.Reddit(**CONFIG['reddit'])
-        self.sql_parameters = CONFIG['sql']
-
-        self.job_lock = threading.Lock()
-        self.submission_writer = SubmissionWriter(self.logger, CONFIG['sql'], batch_size=32)
-        self.comment_writer = CommentWriter(self.logger, CONFIG['sql'], batch_size=64)
-
-        self.first_entry = None
-        self.last_entry = None
-        self.get_time_bounds()
-        self.logger.info("initiated submission/comment pipeline")
+        self.reddit_params = reddit_params
+        self.reddit = praw.Reddit(**self.reddit_params)
 
 
-    def get(self, limit=64):
-        """ A function which ingests raw data into databases. The function pulls, parses, and stores all submissions
-            which can be found within the specified range making use of the `psraw` reddit API. This function call is
-            blocking and cannot be concurrently called by multiple threads.
-
-        Args
-            limit <int>: A integer denoting how many new reddit submissions to pull in. `limit` denotes a maximum number
-                of new submissions.
-        """
-        with self.job_lock:
-            self.logger.info("performing a safe get of {} items".format(limit))
-            return self.unsafe_get(self.last_entry, limit)
+    def get_time_bounds_query(self):
+        return 'SELECT MIN(creation_datetime) as min, MAX(creation_datetime) as max FROM submissions WHERE subreddit_name="{}"'.format(self.subreddit)
 
 
     def unsafe_get(self, start, limit=64):
-        """ A nonblocking, unsafe version of get. A starting argument is provided but can cause problems with data
-            continuity and duplication if called concurrently by different threads.
-        """
         self.logger.info("ingesting data from after {} (limit {})".format(
             datetime.fromtimestamp(start).strftime('%Y-%m-%d %H:%M:%S'),
             limit
@@ -71,21 +42,28 @@ class Scheduler(object):
 
         counter = 0
         for submission in iterator:
-            print("{}: {}".format(datetime.fromtimestamp(submission.created_utc).strftime('%Y-%m-%d %H:%M:%S'), submission.permalink))
+            self.logger.info("{}: {}".format(
+                datetime.fromtimestamp(submission.created_utc).strftime('%Y-%m-%d %H:%M:%S'),
+                submission.permalink
+            ))
             self.submission_writer.push(Submission(submission))
 
             comment_iterator = psraw.comment_search(
                 self.reddit, q='', subreddit=self.subreddit, limit=100000,
                 sort='asc', link_id=submission.id
             )
+
             for comment in comment_iterator:
-                print(" | {}".format(datetime.fromtimestamp(comment.created_utc).strftime('%Y-%m-%d %H:%M:%S')))
+                self.logger.info(" | {}".format(
+                    datetime.fromtimestamp(comment.created_utc).strftime('%Y-%m-%d %H:%M:%S')
+                ))
                 self.comment_writer.push(Comment(comment))
 
             counter += 1
 
         self.last_entry = submission.created_utc
         self.submission_writer.flush()
+        self.comment_writer.flush()
 
         self.logger.info('ingested {} new submissions'.format(counter))
 
@@ -95,30 +73,3 @@ class Scheduler(object):
             "new_bounds": {"start": self.first_entry, "end": self.last_entry},
             "num_new_items": counter
         }
-
-
-    def get_time_bounds(self):
-        """ An initialization method which checks the existing time bounds of data in the database so that the server
-            can maintain non-duplicate data when it is shutdown and restarted.
-        """
-        query = 'SELECT MIN(creation_datetime) as min, MAX(creation_datetime) as max FROM submissions WHERE subreddit_name="{}"'.format(self.subreddit)
-
-        db = sql.connect(**self.sql_parameters)
-        cur = db.cursor()
-        cur.execute(query)
-        result_set = cur.fetchall()
-        cur.close()
-        db.close()
-
-        self.first_entry = result_set[0][0]
-        self.last_entry = result_set[0][1]
-
-        if self.last_entry is None:
-            self.first_entry = DEFAULT_START_DATETIME
-            self.last_entry = DEFAULT_START_DATETIME
-            self.logger.info("no historical data found, starting with {} as a bound".format(self.first_entry))
-
-        else:
-            self.first_entry = calendar.timegm(self.first_entry.timetuple())
-            self.last_entry = calendar.timegm(self.last_entry.timetuple())
-            self.logger.info("found existing data with time bounds {}, {}".format(self.first_entry, self.last_entry))

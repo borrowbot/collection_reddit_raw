@@ -15,7 +15,7 @@ Running multiple instances of this service is okay only for ingestion of data fr
 
 # Setting Configuration
 
-A blank configuration file is provided in `collection_raw_ingest/resources/config.yml`. See the PRAW documentation for guidance on configuring the reddit portion of the configuration file.
+A blank configuration file is provided in `collection_reddit_raw/resources/config.yml`. See the PRAW documentation for guidance on configuring the reddit portion of the configuration file.
 
 
 # Creating SQL Tables
@@ -75,13 +75,13 @@ docker build . -t baseimage_borrowbot
 Then, the DockerFile here can be built with:
 
 ```
-docker build . -t collection_raw_ingest
+docker build . -t collection_reddit_raw
 ```
 
 The service can be run with:
 
 ```
-docker run -d --network=host collection_raw_ingest
+docker run -d --network=host collection_reddit_raw
 ```
 
 

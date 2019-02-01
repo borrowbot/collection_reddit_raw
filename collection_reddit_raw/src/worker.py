@@ -33,7 +33,7 @@ class RedditRawTask(object):
 
         counter = 0
         for submission in iterator:
-            self.logging.info("{}: {}".format(
+            self.logger.info("{}: {}".format(
                 datetime.fromtimestamp(submission.created_utc).strftime('%Y-%m-%d %H:%M:%S'),
                 submission.permalink
             ))
@@ -45,7 +45,7 @@ class RedditRawTask(object):
             )
 
             for comment in comment_iterator:
-                self.logging.info(" | {}".format(
+                self.logger.info(" | {}".format(
                     datetime.fromtimestamp(comment.created_utc).strftime('%Y-%m-%d %H:%M:%S')
                 ))
                 self.comment_writer.push(Comment(comment))

@@ -28,10 +28,10 @@ worker_thread.start()
 # schedulers
 scheduler_logger = get_default_logger('scheduler')
 block_generator = RedditRawBlockGenerator(CONFIG['sql'])
-revert_function = RedditRawRevert(CONFIG['sql'])
+revert_obj = RedditRawRevert(CONFIG['sql'])
 scheduler = Scheduler(
     'collection_landsat_remote_index', interface, block_generator, scheduler_logger, blocking=True,
-    task_timeout=600, confirm_interval=10
+    revert_fn=revert_obj.revert_fn, task_timeout=60, confirm_interval=5
 )
 
 # service server

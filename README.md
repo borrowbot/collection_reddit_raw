@@ -3,12 +3,12 @@ A flask based data collection service which can be used to ingest and maintain a
 
 # Data Quality Assurances
 
-The service, once started ingests data from starting from 2010-01-01 in ascending order. So long as the service is not interrupted during ingestion, the service ensures a temporally contiguous block of data with no duplication even between service restarts.
+The service, once started ingests data from starting from 2010-01-01 in ascending order. The service ensures a temporally contiguous block of data with no duplication even between service restarts and interrupted work blocks.
 
 
 # Concurrency Requirements
 
-Each instance of service is blocked to a single ingestion request at a time. Additional requests will be blocked until the currently executing one is completed.
+Each instance of service is blocked to a single ingestion request at a time. Additional requests will return an internal service error until the currently executing one is completed.
 
 Running multiple instances of this service is okay only for ingestion of data from disjoint subreddits.
 
@@ -66,10 +66,10 @@ CREATE TABLE comments (
 
 # Building and Running in Docker
 
-To build the docker container, first build the [baseimage](https://github.com/borrowbot/baseimage) with the following command:
+To build the docker container, first build the [baseimage](https://github.com/project-earth/baseimage) with the following command:
 
 ```
-docker build . -t baseimage_borrowbot
+docker build . -t baseimage
 ```
 
 Then, the DockerFile here can be built with:

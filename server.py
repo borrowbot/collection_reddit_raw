@@ -1,35 +1,54 @@
 import json
+import threading
 from flask import request
 
-from collection_raw_ingest.src.scheduler import SubRedditScheduler
 from baseimage.config import CONFIG
-from baseimage.flask.flask import get_flask_server
-from baseimage.logger import get_default_logger
+from baseimage.flask import get_flask_server
+from baseimage.logger.logger import get_default_logger
+
+from collection_reddit_raw.src.worker import RedditRawTask
+from collection_reddit_raw.src.block_generator import RedditRawBlockGenerator
+from collection_reddit_raw.src.revert import RedditRawRevert
+
+from lib_learning.collection.workers.base_worker import Worker
+from lib_learning.collection.scheduler import Scheduler
+from lib_learning.collection.interfaces.local_interface import LocalInterface
 
 
-logger = get_default_logger()
-server = get_flask_server()
-scheduler = SubRedditScheduler(
-    logger=logger,
-    table_name=None,
-    sql_params=CONFIG['sql'],
-    timebound_name=None,
-    subreddit=CONFIG['subreddit'],
-    reddit_params=CONFIG['reddit']
+# interface
+interface = LocalInterface()
+
+# workers
+worker_logger = get_default_logger('worker')
+task_obj = RedditRawTask(worker_logger, CONFIG['subreddit'], CONFIG['sql'], CONFIG['reddit'])
+worker_thread = threading.Thread(target=Worker, args=(interface, task_obj.main, worker_logger))
+worker_thread.setDaemon(True)
+worker_thread.start()
+
+# schedulers
+scheduler_logger = get_default_logger('scheduler')
+block_generator = RedditRawBlockGenerator(CONFIG['sql'])
+revert_obj = RedditRawRevert(CONFIG['sql'])
+scheduler = Scheduler(
+    'collection_landsat_remote_index', interface, block_generator, scheduler_logger, blocking=True,
+    revert_fn=revert_obj.revert_fn, task_timeout=60, confirm_interval=5
 )
 
+# service server
+# TODO: endpoints here should be standardized and moved into lib_learning.collection
+server = get_flask_server()
 
-@server.route("/fill_data", methods=['POST'])
-def fill_data():
+
+@server.route('/push', methods=["POST"])
+def push():
     limit = request.args.get('limit', type=int, default=1)
-    return json.dumps(scheduler.get(limit))
+    return json.dumps(scheduler.push_next_block(limit=limit))
 
 
-@server.route("/update_data", methods=['POST'])
-def update():
-    start = request.args.get('start', type=int)
-    limit = request.args.get('limit', type=int, default=1)
-    return json.dumps(scheduler.update(start, limit))
+@server.route('/get_queue')
+def get_queue():
+    return json.dumps(scheduler.pending_work)
 
 
-server.run(port=CONFIG['port'])
+if __name__ == "__main__":
+    server.run(port=CONFIG['port'])

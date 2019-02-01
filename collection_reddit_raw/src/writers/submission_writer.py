@@ -1,4 +1,4 @@
-from lib_collection.batch_writer import BatchWriter
+from lib_learning.collection.batch_writer import BatchWriter
 
 
 class SubmissionWriter(BatchWriter):

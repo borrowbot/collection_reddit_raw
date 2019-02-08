@@ -1,6 +1,7 @@
-from datetime import datetime
 import requests
 import praw
+from datetime import datetime
+from dateutil.relativedelta import relativedelta
 
 import collection_reddit_raw.src.psraw as psraw
 from collection_reddit_raw.src.wrapper_objects.submission import Submission
@@ -10,7 +11,7 @@ from collection_reddit_raw.src.writers.comment_writer import CommentWriter
 
 
 class RedditRawTask(object):
-    def __init__(self, logger, subreddit, sql_params, reddit_params):
+    def __init__(self, logger, subreddit, sql_params, reddit_params, cutoff_months=6):
         self.sql_params = sql_params
         self.subreddit = subreddit
         self.logger = logger
@@ -25,6 +26,7 @@ class RedditRawTask(object):
     def main(self, block):
         assert 'limit' in block
         assert 'after' in block
+        cutoff_time = datetime.utcnow() + relativedelta(months=-cutoff_months)
 
         iterator = psraw.submission_search(
             self.reddit, q='', subreddit=self.subreddit,
@@ -37,7 +39,10 @@ class RedditRawTask(object):
                 datetime.fromtimestamp(submission.created_utc).strftime('%Y-%m-%d %H:%M:%S'),
                 submission.permalink
             ))
-            self.submission_writer.push(Submission(submission))
+            s = Submission(submission)
+            if s.creation_datetime > cutoff_time:
+                break
+            self.submission_writer.push(s)
 
             comment_iterator = psraw.comment_search(
                 self.reddit, q='', subreddit=self.subreddit, limit=100000,

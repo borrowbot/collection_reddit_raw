@@ -4,8 +4,8 @@ from datetime import datetime
 from dateutil.relativedelta import relativedelta
 
 import collection_reddit_raw.src.psraw as psraw
-from collection_reddit_raw.src.wrapper_objects.submission import Submission
-from collection_reddit_raw.src.wrapper_objects.comment import Comment
+from lib_borrowbot_core.raw_objects.submission import Submission
+from lib_borrowbot_core.raw_objects.comment import Comment
 from collection_reddit_raw.src.writers.submission_writer import SubmissionWriter
 from collection_reddit_raw.src.writers.comment_writer import CommentWriter
 
@@ -17,6 +17,7 @@ class RedditRawTask(object):
         self.logger = logger
         self.reddit_params = reddit_params
         self.sql_params = sql_params
+        self.cutoff_months = cutoff_months
 
         self.reddit = praw.Reddit(**self.reddit_params)
         self.comment_writer = CommentWriter(logger, sql_params, float('inf'))
@@ -26,7 +27,7 @@ class RedditRawTask(object):
     def main(self, block):
         assert 'limit' in block
         assert 'after' in block
-        cutoff_time = datetime.utcnow() + relativedelta(months=-cutoff_months)
+        cutoff_time = datetime.utcnow() + relativedelta(months=-self.cutoff_months)
 
         iterator = psraw.submission_search(
             self.reddit, q='', subreddit=self.subreddit,
@@ -39,7 +40,7 @@ class RedditRawTask(object):
                 datetime.fromtimestamp(submission.created_utc).strftime('%Y-%m-%d %H:%M:%S'),
                 submission.permalink
             ))
-            s = Submission(submission)
+            s = Submission(init_object=submission)
             if s.creation_datetime > cutoff_time:
                 break
             self.submission_writer.push(s)
@@ -53,7 +54,7 @@ class RedditRawTask(object):
                 self.logger.info(" | {}".format(
                     datetime.fromtimestamp(comment.created_utc).strftime('%Y-%m-%d %H:%M:%S')
                 ))
-                self.comment_writer.push(Comment(comment))
+                self.comment_writer.push(Comment(init_object=comment))
 
             counter += 1
 

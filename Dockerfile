@@ -11,6 +11,11 @@ RUN mkdir $BASE_PATH/logs
 RUN apt-get update --fix-missing
 RUN apt-get install --assume-yes libmariadbclient-dev gcc git
 
+# install lib_borrowbot_core
+RUN git clone https://github.com/borrowbot/lib_borrowbot_core.git $LIB_PATH/lib_borrowbot_core
+RUN pip install -r $LIB_PATH/lib_borrowbot_core/requirements.txt
+RUN pip install $LIB_PATH/lib_borrowbot_core
+
 # install lib_learning library
 RUN git clone https://github.com/frankwang95/lib_learning.git $LIB_PATH/lib_learning
 RUN pip install -r $LIB_PATH/lib_learning/requirements_pipelines.txt

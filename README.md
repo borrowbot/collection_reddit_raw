@@ -3,7 +3,9 @@ A flask based data collection service which can be used to ingest and maintain a
 
 # Data Quality Assurances
 
-The service, once started ingests data from starting from 2010-01-01 in ascending order. The service ensures a temporally contiguous block of data with no duplication even between service restarts and interrupted work blocks.
+The service, once started ingests data from starting from 2010-01-01 in ascending order. The service ensures a temporally contiguous block of data with no duplication. Integrity of the data is assured in most failure cases including network failure and sudden service termination.
+
+To avoid having to backtrack to update submissions with comments made after initial ingestion, the service keeps a historical record of submissions up to 6 months prior to the present. Posts older than six months old are assumed to be fairly static. Handling of more recent content should be done with a different service.
 
 
 # Concurrency Requirements

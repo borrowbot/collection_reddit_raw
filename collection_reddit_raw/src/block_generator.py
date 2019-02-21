@@ -8,13 +8,12 @@ class RedditRawBlockGenerator(WorkBlockGenerator):
     def __init__(self, sql_params, default_after=1262304000):
         self.sql_params = sql_params
         self.default_after = default_after
-        self.after = self.get_newest_submission()
 
 
     def get_next(self, limit=1):
-        self.after = self.get_newest_submission()
+        after = self.get_newest_submission()
         return {
-            'after': self.after,
+            'after': after,
             'limit': limit
         }
 

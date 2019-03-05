@@ -30,7 +30,7 @@ scheduler_logger = get_default_logger('scheduler')
 block_generator = RedditRawBlockGenerator(CONFIG['sql'])
 revert_obj = RedditRawRevert(CONFIG['sql'])
 scheduler = Scheduler(
-    'collection_landsat_remote_index', interface, block_generator, scheduler_logger, blocking=True,
+    'collection_reddit_raw', interface, block_generator, scheduler_logger, blocking=True,
     revert_fn=revert_obj.revert_fn, task_timeout=600, confirm_interval=10
 )
 

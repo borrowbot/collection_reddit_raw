@@ -28,7 +28,7 @@ Create a new SQL database making sure to set default encoding to `utf8mb4` or el
 CREATE DATABASE redditdatabase CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 ```
 
-Two tables are required in this database and should be created with the following specification:
+Three tables are required in this database and should be created with the following specification:
 
 ```
 CREATE TABLE submissions (
@@ -62,6 +62,13 @@ CREATE TABLE comments (
   author_id VARCHAR(16),
   parent_id VARCHAR(16),
   link_id VARCHAR(16)
+);
+```
+
+```
+CREATE TABLE user_lookup (
+  user_id VARCHAR(16) NOT NULL PRIMARY KEY,
+  user_name VARCHAR(128) NOT NULL UNIQUE KEY
 );
 ```
 

@@ -6,8 +6,10 @@ from dateutil.relativedelta import relativedelta
 import collection_reddit_raw.src.psraw as psraw
 from lib_borrowbot_core.raw_objects.submission import Submission
 from lib_borrowbot_core.raw_objects.comment import Comment
+from lib_borrowbot_core.raw_objects.user import User
 from collection_reddit_raw.src.writers.submission_writer import SubmissionWriter
 from collection_reddit_raw.src.writers.comment_writer import CommentWriter
+from collection_reddit_raw.src.writers.user_lookup_writer import UserLookupWriter
 
 
 class RedditRawTask(object):
@@ -22,6 +24,7 @@ class RedditRawTask(object):
         self.reddit = praw.Reddit(**self.reddit_params)
         self.comment_writer = CommentWriter(logger, sql_params, float('inf'))
         self.submission_writer = SubmissionWriter(logger, sql_params, float('inf'))
+        self.user_lookup_writer = UserLookupWriter(logger, sql_params, float('inf'))
 
 
     def main(self, block):
@@ -34,7 +37,6 @@ class RedditRawTask(object):
             limit=block['limit'], sort='asc', after=block['after']
         )
 
-        counter = 0
         for submission in iterator:
             self.logger.info("{}: {}".format(
                 datetime.fromtimestamp(submission.created_utc).strftime('%Y-%m-%d %H:%M:%S'),
@@ -43,7 +45,9 @@ class RedditRawTask(object):
             s = Submission(init_object=submission)
             if s.creation_datetime > cutoff_time:
                 break
+            u = User(user_id=s.author_id, user_name=s.author_name)
             self.submission_writer.push(s)
+            self.user_lookup_writer.push(u)
 
             comment_iterator = psraw.comment_search(
                 self.reddit, q='', subreddit=self.subreddit, limit=100000,
@@ -56,7 +60,6 @@ class RedditRawTask(object):
                 ))
                 self.comment_writer.push(Comment(init_object=comment))
 
-            counter += 1
-
         self.submission_writer.flush()
         self.comment_writer.flush()
+        self.user_lookup_writer.flush()

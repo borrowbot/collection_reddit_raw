@@ -47,7 +47,8 @@ class RedditRawTask(object):
                 break
             u = User(user_id=s.author_id, user_name=s.author_name)
             self.submission_writer.push(s)
-            self.user_lookup_writer.push(u)
+            if u.user_id is not None and u.user_name is not None:
+                self.user_lookup_writer.push(u)
 
             comment_iterator = psraw.comment_search(
                 self.reddit, q='', subreddit=self.subreddit, limit=100000,

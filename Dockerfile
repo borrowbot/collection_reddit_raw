@@ -9,7 +9,7 @@ RUN mkdir $BASE_PATH/logs
 # ============= Dependencies ============= #
 # install container wide dependencies
 RUN apt-get update --fix-missing
-RUN apt-get install --assume-yes libmariadbclient-dev gcc git
+RUN apt-get install --assume-yes default-libmysqlclient-dev gcc git
 
 # install lib_borrowbot_core
 RUN git clone https://github.com/borrowbot/lib_borrowbot_core.git $LIB_PATH/lib_borrowbot_core

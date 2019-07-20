@@ -34,6 +34,7 @@ ENDPOINTS = {
             'after': int,
             'limit': int,
             'q': str,
+            'author': str,
             'sort': sort_type,
             'subreddit': str
         },

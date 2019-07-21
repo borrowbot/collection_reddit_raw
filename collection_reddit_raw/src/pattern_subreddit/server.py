@@ -1,6 +1,7 @@
 import json
 import threading
 from flask import request
+import requests
 
 from baseimage.config import CONFIG
 from baseimage.flask import get_flask_server
@@ -37,17 +38,11 @@ scheduler = Scheduler(
 # server
 server = get_flask_server()
 
-
 @server.route('/push', methods=["POST"])
 def push():
     limit = request.args.get('limit', type=int, default=1)
     return json.dumps(scheduler.push_next_block(limit=limit))
 
-
 @server.route('/get_queue')
 def get_queue():
     return json.dumps(scheduler.pending_work)
-
-
-if __name__ == "__main__":
-    server.run(port=CONFIG['port'])

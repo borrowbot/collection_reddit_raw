@@ -28,13 +28,14 @@ class RedditRawTask(object):
 
 
     def main(self, block):
-        assert 'limit' in block
         assert 'after' in block
-        cutoff_time = datetime.utcnow() + relativedelta(months=-self.cutoff_months)
+        assert 'before' in block
+        assert 'limit' in block
 
+        cutoff_time = datetime.utcnow() + relativedelta(months=-self.cutoff_months)
         iterator = psraw.submission_search(
-            self.reddit, q='', subreddit=self.subreddit,
-            limit=block['limit'], sort='asc', after=block['after']
+            self.reddit, q='', subreddit=self.subreddit, limit=block['limit'],
+            sort='asc', after=block['after'], before=block['before']
         )
 
         for submission in iterator:
@@ -51,7 +52,7 @@ class RedditRawTask(object):
                 self.user_lookup_writer.push(u)
 
             comment_iterator = psraw.comment_search(
-                self.reddit, q='', subreddit=self.subreddit, limit=100000,
+                self.reddit, q='', subreddit=self.subreddit, limit=1000000,
                 sort='asc', link_id=submission.id
             )
 
@@ -61,6 +62,6 @@ class RedditRawTask(object):
                 ))
                 self.comment_writer.push(Comment(init_object=comment))
 
-        self.submission_writer.flush()
-        self.comment_writer.flush()
-        self.user_lookup_writer.flush()
+        # self.submission_writer.flush()
+        # self.comment_writer.flush()
+        # self.user_lookup_writer.flush()

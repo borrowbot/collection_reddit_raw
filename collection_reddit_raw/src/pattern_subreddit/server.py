@@ -1,5 +1,4 @@
 import json
-import threading
 from flask import request
 import requests
 
@@ -7,7 +6,7 @@ from baseimage.config import CONFIG
 from baseimage.flask import get_flask_server
 from baseimage.logger.logger import get_default_logger
 
-from collection_reddit_raw.src.pattern_subreddit.worker import RedditRawTask
+from collection_reddit_raw.src.pattern_subreddit.worker import RedditRawWorker
 from collection_reddit_raw.src.pattern_subreddit.block_generator import RedditRawBlockGenerator
 
 from lib_learning.collection.workers.base_worker import Worker
@@ -20,8 +19,7 @@ interface = LocalInterface()
 
 # workers
 worker_logger = get_default_logger('worker')
-task_obj = RedditRawTask(worker_logger, CONFIG['subreddit'], CONFIG['sql'], CONFIG['reddit'])
-worker = Worker(interface, task_obj.main, worker_logger)
+worker = RedditRawWorker(interface, worker_logger, CONFIG['subreddit'], CONFIG['sql'], CONFIG['reddit'])
 worker.start()
 
 # schedulers

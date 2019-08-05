@@ -7,24 +7,26 @@ import collection_reddit_raw.src.psraw as psraw
 from lib_borrowbot_core.raw_objects.submission import Submission
 from lib_borrowbot_core.raw_objects.comment import Comment
 from lib_borrowbot_core.raw_objects.user import User
+from lib_learning.collection.workers.base_worker import Worker
 from collection_reddit_raw.src.writers.submission_writer import SubmissionWriter
 from collection_reddit_raw.src.writers.comment_writer import CommentWriter
 from collection_reddit_raw.src.writers.user_lookup_writer import UserLookupWriter
 
 
-class RedditRawTask(object):
-    def __init__(self, logger, subreddit, sql_params, reddit_params, cutoff_months=6):
+class RedditRawWorker(Worker):
+    def __init__(self, interface, logger, subreddit, sql_params, reddit_params, cutoff_months=6):
+        super().__init__(interface, self.main, logger)
+
         self.sql_params = sql_params
         self.subreddit = subreddit
-        self.logger = logger
         self.reddit_params = reddit_params
         self.sql_params = sql_params
         self.cutoff_months = cutoff_months
 
         self.reddit = praw.Reddit(**self.reddit_params)
-        self.comment_writer = CommentWriter(logger, sql_params, float('inf'))
-        self.submission_writer = SubmissionWriter(logger, sql_params, float('inf'))
-        self.user_lookup_writer = UserLookupWriter(logger, sql_params, float('inf'))
+        self.comment_writer = CommentWriter(self.logger, self.sql_params, float('inf'))
+        self.submission_writer = SubmissionWriter(self.logger, self.sql_params, float('inf'))
+        self.user_lookup_writer = UserLookupWriter(self.logger, self.sql_params, float('inf'))
 
 
     def main(self, block):

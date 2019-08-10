@@ -14,7 +14,7 @@ def main():
 
     if pattern == 'subreddit':
         from collection_reddit_raw.src.pattern_subreddit.server import server
-    else if pattern == 'user':
+    elif pattern == 'user':
         from collection_reddit_raw.src.pattern_user.server import server
     else:
         raise Exception("invalid pattern in service configuration")

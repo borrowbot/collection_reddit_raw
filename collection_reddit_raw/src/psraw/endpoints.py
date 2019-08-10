@@ -32,6 +32,7 @@ ENDPOINTS = {
     'submission_search': {
         'params': {
             'after': int,
+            'before': int,
             'limit': int,
             'q': str,
             'author': str,

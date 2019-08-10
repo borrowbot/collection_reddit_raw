@@ -19,7 +19,10 @@ interface = LocalInterface()
 
 # workers
 worker_logger = get_default_logger('worker')
-worker = RedditRawWorker(interface, worker_logger, CONFIG['subreddit'], CONFIG['sql'], CONFIG['reddit'])
+worker = RedditRawWorker(
+    interface, worker_logger, CONFIG['subreddit'], CONFIG['submission_table'], CONFIG['comment_table'],
+    CONFIG['sql'], CONFIG['reddit']
+)
 worker.start()
 
 # schedulers

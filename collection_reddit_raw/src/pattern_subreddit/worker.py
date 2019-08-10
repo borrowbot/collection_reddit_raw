@@ -14,7 +14,10 @@ from collection_reddit_raw.src.writers.user_lookup_writer import UserLookupWrite
 
 
 class RedditRawWorker(Worker):
-    def __init__(self, interface, logger, subreddit, sql_params, reddit_params, cutoff_months=6):
+    def __init__(
+        self, interface, logger, subreddit, submission_table,
+        comment_table, sql_params, reddit_params, cutoff_months=6
+    ):
         super().__init__(interface, self.main, logger)
 
         self.sql_params = sql_params
@@ -22,11 +25,13 @@ class RedditRawWorker(Worker):
         self.reddit_params = reddit_params
         self.sql_params = sql_params
         self.cutoff_months = cutoff_months
+        self.comment_table = comment_table
+        self.submission_table = submission_table
 
         self.reddit = praw.Reddit(**self.reddit_params)
-        self.comment_writer = CommentWriter(self.logger, self.sql_params, float('inf'))
-        self.submission_writer = SubmissionWriter(self.logger, self.sql_params, float('inf'))
-        self.user_lookup_writer = UserLookupWriter(self.logger, self.sql_params, float('inf'))
+        self.comment_writer = CommentWriter(self.logger, self.sql_params, self.comment_table, 64)
+        self.submission_writer = SubmissionWriter(self.logger, self.sql_params, self.submission_table, 64)
+        self.user_lookup_writer = UserLookupWriter(self.logger, self.sql_params, 64)
 
 
     def main(self, block):
@@ -64,6 +69,6 @@ class RedditRawWorker(Worker):
                 ))
                 self.comment_writer.push(Comment(init_object=comment))
 
-        # self.submission_writer.flush()
-        # self.comment_writer.flush()
-        # self.user_lookup_writer.flush()
+        self.submission_writer.flush()
+        self.comment_writer.flush()
+        self.user_lookup_writer.flush()

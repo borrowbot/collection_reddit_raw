@@ -7,7 +7,7 @@ import collection_reddit_raw.src.psraw as psraw
 from lib_borrowbot_core.raw_objects.submission import Submission
 from lib_borrowbot_core.raw_objects.comment import Comment
 from lib_borrowbot_core.raw_objects.user import User
-from lib_learning.collection.workers.base_worker import Worker
+from lib_learning.collection.base_worker import Worker
 from collection_reddit_raw.src.writers.submission_writer import SubmissionWriter
 from collection_reddit_raw.src.writers.comment_writer import CommentWriter
 from collection_reddit_raw.src.writers.user_lookup_writer import UserLookupWriter
@@ -23,7 +23,6 @@ class RedditRawWorker(Worker):
         self.sql_params = sql_params
         self.subreddit = subreddit
         self.reddit_params = reddit_params
-        self.sql_params = sql_params
         self.cutoff_months = cutoff_months
         self.comment_table = comment_table
         self.submission_table = submission_table

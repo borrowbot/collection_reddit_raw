@@ -28,9 +28,9 @@ class RedditRawWorker(Worker):
         self.submission_table = submission_table
 
         self.reddit = praw.Reddit(**self.reddit_params)
-        self.comment_writer = CommentWriter(self.logger, self.sql_params, self.comment_table, 64)
-        self.submission_writer = SubmissionWriter(self.logger, self.sql_params, self.submission_table, 64)
-        self.user_lookup_writer = UserLookupWriter(self.logger, self.sql_params, 64)
+        self.comment_writer = CommentWriter(self.logger, self.sql_params, self.comment_table, float('inf'))
+        self.submission_writer = SubmissionWriter(self.logger, self.sql_params, self.submission_table, float('inf'))
+        self.user_lookup_writer = UserLookupWriter(self.logger, self.sql_params, float('inf'))
 
 
     def main(self, block):
@@ -39,6 +39,7 @@ class RedditRawWorker(Worker):
         assert 'limit' in block
 
         cutoff_time = datetime.utcnow() + relativedelta(months=-self.cutoff_months)
+        submissions = []
         iterator = psraw.submission_search(
             self.reddit, q='', subreddit=self.subreddit, limit=block['limit'],
             sort='asc', after=block['after'], before=block['before']
@@ -53,21 +54,27 @@ class RedditRawWorker(Worker):
             if s.creation_datetime > cutoff_time:
                 break
             u = User(user_id=s.author_id, user_name=s.author_name)
+            submissions.append(s.submission_id)
             self.submission_writer.push(s)
             if u.user_id is not None and u.user_name is not None:
                 self.user_lookup_writer.push(u)
 
-            comment_iterator = psraw.comment_search(
-                self.reddit, q='', subreddit=self.subreddit, limit=1000000,
-                sort='asc', link_id=submission.id
-            )
 
-            for comment in comment_iterator:
-                self.logger.info(" | {}".format(
-                    datetime.fromtimestamp(comment.created_utc).strftime('%Y-%m-%d %H:%M:%S')
-                ))
-                self.comment_writer.push(Comment(init_object=comment))
+        comment_iterator = psraw.comment_search(
+            self.reddit, q='', subreddit=self.subreddit, limit=1000000,
+            sort='asc', link_id=','.join(submissions)
+        )
 
-        self.submission_writer.flush()
-        self.comment_writer.flush()
-        self.user_lookup_writer.flush()
+        for comment in comment_iterator:
+            self.logger.info(" | {}".format(
+                datetime.fromtimestamp(comment.created_utc).strftime('%Y-%m-%d %H:%M:%S')
+            ))
+            c = Comment(init_object=comment)
+            u = User(user_id=c.author_id, user_name=s.author_name)
+            self.comment_writer.push(c)
+            if u.user_id is not None and u.user_name is not None:
+                self.user_lookup_writer.push(u)
+
+        # self.submission_writer.flush()
+        # self.comment_writer.flush()
+        # self.user_lookup_writer.flush()

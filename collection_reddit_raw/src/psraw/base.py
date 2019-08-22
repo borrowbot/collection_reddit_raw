@@ -69,6 +69,7 @@ def create_endpoint_function(name, config):
             query_params = urlencode(coerced_kwargs)
             url = '{}{}?{}'.format(BASE_ADDRESS, config['url'], query_params)
             data = requests.get(url)
+            print(data)
             data = data.json()['data']
 
             for item in data:

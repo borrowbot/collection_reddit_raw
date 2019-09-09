@@ -70,11 +70,11 @@ class RedditRawWorker(Worker):
                 datetime.fromtimestamp(comment.created_utc).strftime('%Y-%m-%d %H:%M:%S')
             ))
             c = Comment(init_object=comment)
-            u = User(user_id=c.author_id, user_name=s.author_name)
+            u = User(user_id=c.author_id, user_name=c.author_name)
             self.comment_writer.push(c)
             if u.user_id is not None and u.user_name is not None:
                 self.user_lookup_writer.push(u)
 
-        # self.submission_writer.flush()
-        # self.comment_writer.flush()
-        # self.user_lookup_writer.flush()
+        self.submission_writer.flush()
+        self.comment_writer.flush()
+        self.user_lookup_writer.flush()

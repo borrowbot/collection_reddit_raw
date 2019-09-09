@@ -1,3 +1,4 @@
+import time
 import requests
 try:
     from urllib import urlencode
@@ -68,8 +69,8 @@ def create_endpoint_function(name, config):
             coerced_kwargs['limit'] = limit
             query_params = urlencode(coerced_kwargs)
             url = '{}{}?{}'.format(BASE_ADDRESS, config['url'], query_params)
+            print(url)
             data = requests.get(url)
-            print(data)
             data = data.json()['data']
 
             for item in data:
@@ -82,6 +83,7 @@ def create_endpoint_function(name, config):
                 # On subsequent requests, specify that we only want results from
                 # before or after the last item we were sent
                 coerced_kwargs[direction] = data[-1]['created_utc']
+            time.sleep(2)
 
     endpoint_func.__name__ = name
     return endpoint_func

@@ -37,14 +37,13 @@ class RedditRawWorker(Worker):
         assert 'after' in block
         assert 'before' in block
         assert 'limit' in block
-
         cutoff_time = datetime.utcnow() + relativedelta(months=-self.cutoff_months)
+
         submissions = []
         iterator = psraw.submission_search(
             self.reddit, q='', subreddit=self.subreddit, limit=block['limit'],
             sort='asc', after=block['after'], before=block['before']
         )
-
         for submission in iterator:
             self.logger.info("{}: {}".format(
                 datetime.fromtimestamp(submission.created_utc).strftime('%Y-%m-%d %H:%M:%S'),
@@ -58,23 +57,18 @@ class RedditRawWorker(Worker):
             self.submission_writer.push(s)
             if u.user_id is not None and u.user_name is not None:
                 self.user_lookup_writer.push(u)
+        self.submission_writer.flush()
 
-
+        if len(submissions) == 0:
+            return
         comment_iterator = psraw.comment_search(
             self.reddit, q='', subreddit=self.subreddit, limit=1000000,
             sort='asc', link_id=','.join(submissions)
         )
-
         for comment in comment_iterator:
             self.logger.info(" | {}".format(
                 datetime.fromtimestamp(comment.created_utc).strftime('%Y-%m-%d %H:%M:%S')
             ))
             c = Comment(init_object=comment)
-            u = User(user_id=c.author_id, user_name=c.author_name)
             self.comment_writer.push(c)
-            if u.user_id is not None and u.user_name is not None:
-                self.user_lookup_writer.push(u)
-
-        self.submission_writer.flush()
         self.comment_writer.flush()
-        self.user_lookup_writer.flush()

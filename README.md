@@ -1,97 +1,17 @@
-A flask based data collection service which can be used to ingest and maintain a historical database of reddit posts and comments from a single subreddit.
-
-
-# Data Quality Assurances
-
-The service, once started ingests data from starting from 2010-01-01 in ascending order. The service ensures a temporally contiguous block of data with no duplication. Integrity of the data is assured in most failure cases including network failure and sudden service termination.
-
-To avoid having to backtrack to update submissions with comments made after initial ingestion, the service keeps a historical record of submissions up to 6 months prior to the present. Posts older than six months old are assumed to be fairly static. Handling of more recent content should be done with a different service.
-
-
-# Concurrency Requirements
-
-Each instance of service is blocked to a single ingestion request at a time. Additional requests will return an internal service error until the currently executing one is completed.
-
-Running multiple instances of this service is okay only for ingestion of data from disjoint subreddits.
-
+A flask based data collection service which can be used to ingest and maintain a historical database of reddit posts and comments from a single subreddit. This service template implements a number of different ingestion patterns which can be used together to gather a complete set of historical data for analysis.
 
 # Setting Configuration
 
-A blank configuration file is provided in `collection_reddit_raw/resources/config.yml`. See the PRAW documentation for guidance on configuring the reddit portion of the configuration file.
+Before running this service, a configuration file template found at `collection_reddit_raw/resources/config.yml` needs to be set. The configuration has a general section at the top that is used to set the ingestion pattern and some other globally applicable configuration. Depending on the ingestion pattern used, further configuration is probably necessary - templates for each ingestion pattern can be found commented out in the configuration template. See the ingestion pattern specific documentation for more details.
 
+# SQL Requirements
 
-# Creating SQL Tables
-
-Create a new SQL database making sure to set default encoding to `utf8mb4` or else ingestion will fail on encountering a 4-byte unicode character. For instance:
+Projects built on this service write parsed submissions and comments to a MySQL database. Though the specific tables required for different ingestion patterns can vary (documented in each pattern's respective documentation), the database these tables reside in must be set to a default encoding to `utf8mb4` or else ingestion will fail on encountering a 4-byte unicode character. For instance:
 
 ```
 CREATE DATABASE redditdatabase CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 ```
 
-Three tables are required in this database and should be created with the following specification:
+# Building Containers with Docker
 
-```
-CREATE TABLE submissions (
-  submission_id VARCHAR(16) NOT NULL PRIMARY KEY,
-  creation_datetime DATETIME,
-  retrieval_datetime DATETIME,
-  score MEDIUMINT UNSIGNED,
-  num_comments MEDIUMINT UNSIGNED,
-  author_name VARCHAR(128),
-  author_id VARCHAR(16),
-  upvote_ratio FLOAT(3,2),
-  url VARCHAR(512),
-  permalink VARCHAR(512),
-  subreddit_name VARCHAR(128),
-  subreddit_id VARCHAR(16),
-  title VARCHAR(512),
-  text TEXT
-);
-```
-
-```
-CREATE TABLE comments (
-  comment_id VARCHAR(16) NOT NULL PRIMARY KEY,
-  creation_datetime DATETIME,
-  retrieval_datetime DATETIME,
-  score MEDIUMINT,
-  subreddit_name VARCHAR(128),
-  subreddit_id VARCHAR(16),
-  text TEXT,
-  author_name VARCHAR(128),
-  author_id VARCHAR(16),
-  parent_id VARCHAR(16),
-  link_id VARCHAR(16)
-);
-```
-
-```
-CREATE TABLE user_lookup (
-  user_id VARCHAR(16) NOT NULL PRIMARY KEY,
-  user_name VARCHAR(128) NOT NULL UNIQUE KEY
-);
-```
-
-
-# Building and Running in Docker
-
-To build the docker container, first build the [baseimage](https://github.com/project-earth/baseimage) with the following command:
-
-```
-docker build . -t baseimage
-```
-
-Then, the DockerFile here can be built with:
-
-```
-docker build . -t collection_reddit_raw
-```
-
-The service can be run with:
-
-```
-docker run -d --network=host collection_reddit_raw
-```
-
-
-# Using the API
+This ingestion service runs in a Docker container for dependency management. Before building the service itself, you need to first build the docker base image we've provided [here](https://github.com/project-earth/baseimage). Afterwards, the image for the ingestion service itself and be built and run.

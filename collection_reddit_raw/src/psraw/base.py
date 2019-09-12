@@ -83,7 +83,7 @@ def create_endpoint_function(name, config):
                 # On subsequent requests, specify that we only want results from
                 # before or after the last item we were sent
                 coerced_kwargs[direction] = data[-1]['created_utc']
-            time.sleep(2)
+            time.sleep(5)
 
     endpoint_func.__name__ = name
     return endpoint_func

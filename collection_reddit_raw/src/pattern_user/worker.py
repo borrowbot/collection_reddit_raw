@@ -1,4 +1,5 @@
 import praw
+import time
 import collection_reddit_raw.src.psraw as psraw
 import prawcore
 
@@ -54,3 +55,6 @@ class RedditUserHistoryWorker(Worker):
 
         self.submission_writer.flush()
         self.comment_writer.flush()
+
+        # Timer to prevent request to pushshift API from next work block to happen too soon
+        time.sleep(2)

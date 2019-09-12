@@ -36,7 +36,7 @@ worker.start()
 scheduler_logger = get_default_logger('scheduler')
 block_generator = RedditUserHistoryBlockGenerator(
     CONFIG['sql'], CONFIG['submission_table'], CONFIG['comment_table'],
-    CONFIG['reference_submission_table'], CONFIG['reference_comment_table'], 512, CONFIG['left_bound']
+    CONFIG['reference_submission_table'], CONFIG['reference_comment_table'], 256, CONFIG['left_bound']
 )
 scheduler = Scheduler(
     'collection_reddit_raw', interface, block_generator, scheduler_logger,

@@ -55,6 +55,3 @@ class RedditUserHistoryWorker(Worker):
 
         self.submission_writer.flush()
         self.comment_writer.flush()
-
-        # Timer to prevent request to pushshift API from next work block to happen too soon
-        time.sleep(2)

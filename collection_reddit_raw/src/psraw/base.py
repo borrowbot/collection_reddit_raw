@@ -76,7 +76,7 @@ def create_endpoint_function(name, config):
             for item in data:
                 yield config['return_type'](r, _data=item)
             if len(data) < limit:
-                raise StopIteration
+                return
             if direction in config['params']:
                 # On subsequent requests, specify that we only want results from
                 # before or after the last item we were sent

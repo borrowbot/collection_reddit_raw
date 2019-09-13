@@ -1,3 +1,4 @@
+import time
 import requests
 try:
     from urllib import urlencode
@@ -68,19 +69,21 @@ def create_endpoint_function(name, config):
             coerced_kwargs['limit'] = limit
             query_params = urlencode(coerced_kwargs)
             url = '{}{}?{}'.format(BASE_ADDRESS, config['url'], query_params)
+            print(url)
             data = requests.get(url)
             data = data.json()['data']
 
             for item in data:
                 yield config['return_type'](r, _data=item)
-
             if len(data) < limit:
                 raise StopIteration
-
             if direction in config['params']:
                 # On subsequent requests, specify that we only want results from
                 # before or after the last item we were sent
                 coerced_kwargs[direction] = data[-1]['created_utc']
+
+            # Timer to prevent request to pushshift API from next work block to happen too soon
+            time.sleep(2)
 
     endpoint_func.__name__ = name
     return endpoint_func

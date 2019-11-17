@@ -14,12 +14,20 @@ Running a ingestion service in the user pattern requires three configurable tabl
 
 1. `$submission_table`: This table, along with `$comment_table` are used to determine the time bounds on the next working block. These two tables are also the sinks that parsed data is written to.
 
-2. `$comment_table`: See above.
-
-3. `$user_lookup_table`: In regularly scheduled work, this table is used to generate a list of all users we have on record so that a work block can be  created for each one.
+2. `$comment_table`: See notes for `$submission_table` above.
 
 
 # Configuration
 
+Running the reddit collection service in the subreddit pattern is done by setting the `pattern: user` in the general service configuration. In addition, this pattern admits the following pattern configuration flags:
+
+* `left_bound: <int>`:
+* `submission_table: <str>`:
+* `comment_table: <str>`:
+* `reference_submission_table: <str>`:
+* `reference_comment_table: <str>`:
+
 
 # API
+
+The subreddit pattern supports the general `/get_queue` and `/push` endpoints of the general reddit collection service. The `/push` endpoint has a single required integer parameter `interval` which specifies the time size in seconds of the block of comments and submissions to ingest.

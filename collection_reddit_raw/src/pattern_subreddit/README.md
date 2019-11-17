@@ -44,13 +44,6 @@ parent_id VARCHAR(16),
 link_id VARCHAR(16)
 ```
 
-3. `$user_lookup_table`: In regularly scheduled work, this table is used to generate a list of all users we have on record so that a work block can be  created for each one. This table should have the following schema:
-```
-user_id VARCHAR(16) NOT NULL PRIMARY KEY,
-user_name VARCHAR(128) NOT NULL UNIQUE KEY
-```
-
-
 # Configuration
 
 Running the reddit collection service in the subreddit pattern is done by setting the `pattern: subreddit` in the general service configuration. In addition, this pattern admits the following pattern configuration flags:

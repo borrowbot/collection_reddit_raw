@@ -92,6 +92,7 @@ class RedditUserHistoryBlockGenerator(WorkBlockGenerator):
 
     def get_next(self, interval):
         assert interval <= 24 * 60 * 60
+        assert interval >= 0
         new_right_interval = self.right_interval + interval
         all_users = self.get_all_users()
         known_users = self.get_known_users()

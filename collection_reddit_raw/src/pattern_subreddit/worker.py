@@ -10,7 +10,6 @@ from lib_borrowbot_core.raw_objects.user import User
 from lib_learning.collection.base_worker import Worker
 from collection_reddit_raw.src.writers.submission_writer import SubmissionWriter
 from collection_reddit_raw.src.writers.comment_writer import CommentWriter
-from collection_reddit_raw.src.writers.user_lookup_writer import UserLookupWriter
 
 
 class RedditRawWorker(Worker):
@@ -30,7 +29,6 @@ class RedditRawWorker(Worker):
         self.reddit = praw.Reddit(**self.reddit_params)
         self.comment_writer = CommentWriter(self.logger, self.sql_params, self.comment_table, float('inf'))
         self.submission_writer = SubmissionWriter(self.logger, self.sql_params, self.submission_table, float('inf'))
-        self.user_lookup_writer = UserLookupWriter(self.logger, self.sql_params, float('inf'))
 
 
     def main(self, block):
@@ -52,11 +50,8 @@ class RedditRawWorker(Worker):
             s = Submission(init_object=submission)
             if s.creation_datetime > cutoff_time:
                 break
-            u = User(user_id=s.author_id, user_name=s.author_name)
             submissions.append(s.submission_id)
             self.submission_writer.push(s)
-            if u.user_id is not None and u.user_name is not None:
-                self.user_lookup_writer.push(u)
         self.submission_writer.flush()
 
         if len(submissions) == 0:

@@ -3,7 +3,6 @@ FROM baseimage
 ENV SERVICE_NAME collection_reddit_raw
 ENV BASE_PATH $SVC_PATH/$SERVICE_NAME/
 WORKDIR $BASE_PATH
-RUN mkdir $BASE_PATH/logs
 
 
 # ============= Dependencies ============= #
@@ -26,8 +25,8 @@ ADD ./requirements.txt $BASE_PATH/requirements.txt
 RUN pip install -r requirements.txt
 
 
-# ============= Source Code ============= #
+# ============= Source & Entrypoint ============= #
 ADD . $BASE_PATH
 RUN pip install .
 
-ENTRYPOINT $BASE_PATH/entrypoint.sh
+ENTRYPOINT $LIB_PATH/baseimage/entrypoint.sh

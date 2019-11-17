@@ -1,2 +1,4 @@
 *__pycache__*
 *.pyc
+reddit_keys
+*.reddit.yml

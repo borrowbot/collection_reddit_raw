@@ -38,7 +38,7 @@ block_generator = RedditRawBlockGenerator(
 )
 scheduler = Scheduler(
     'collection_reddit_raw', interface, block_generator, scheduler_logger,
-    task_timeout=float('inf'), confirm_interval=10
+    task_timeout=float('inf'), confirm_interval=10, tries=10, default_retry_delay=600
 )
 
 # server

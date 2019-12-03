@@ -40,7 +40,7 @@ block_generator = RedditUserHistoryBlockGenerator(
 )
 scheduler = Scheduler(
     'collection_reddit_raw', interface, block_generator, scheduler_logger,
-    task_timeout=float('inf'), confirm_interval=60
+    task_timeout=float('inf'), confirm_interval=60, tries=10, default_retry_delay=420
 )
 
 # server
